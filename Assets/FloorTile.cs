@@ -79,29 +79,6 @@ public class FloorTile : MonoBehaviour
         Destroy(gameObject);
     }
 
-    // 由 GameManager 调用的“预警”方法 -- 老方法，狗屎
-    // public void StartFalling(float delay)
-    // {
-    //     // 1. 变红预警
-    //     // 修改渲染状态：通过指针链路修改材质的颜色属性
-    //     // 链路：this -> meshRenderer -> material -> color
-    //     meshRenderer.material.color = Color.red;
-
-    //     // 延迟调用：Unity 的定时器系统，344 里的软中断或定时任务模拟
-    //     Invoke("Fall", delay);
-    // }
-
-    // 老版垃圾代码
-    // void Fall()
-    // {
-    //     // 物理接管：修改 Rigidbody 结构体中的 isKinematic 布尔值
-    //     // 设为 false 后，物理引擎（PhysX）会在每一帧根据重力公式修改该物体的 Position
-    //     rb.isKinematic = false;
-
-    //     // 内存释放：3秒后通知引擎回收该物体及其所有组件占用的堆内存
-    //     Destroy(gameObject, 3f);
-    // }
-
     // Update is called once per frame
     void Update()
     {

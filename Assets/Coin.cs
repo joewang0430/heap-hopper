@@ -47,7 +47,7 @@ public class Coin : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        // 每一帧绕 Y 轴旋转 90 度 * 时间增量
-        transform.Rotate(Vector3.up * 90f * Time.deltaTime, Space.Self);
+        // 每一帧绕世界坐标的 Y 轴旋转，不受父物体缩放影响
+        transform.Rotate(Vector3.up * 120f * Time.deltaTime, Space.World);
     }
 }

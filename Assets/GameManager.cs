@@ -101,7 +101,7 @@ public class GameManager : MonoBehaviour
     void SpawnNewCoin()
     {
         // 健壮性检查：如果地砖快掉光了，就不刷了
-        if (allTiles.Count < MAX_COINS) return;
+        if (allTiles.Count <= 0) return; // 只要场上还有砖就允许刷
 
         // 1. 筛选合法的地砖 (过滤掉已经有金币的，和开局时的中心点)
         List<FloorTile> eligibleTiles = new List<FloorTile>();
@@ -128,9 +128,10 @@ public class GameManager : MonoBehaviour
             FloorTile targetTile = eligibleTiles[Random.Range(0, eligibleTiles.Count)];
 
             // 在地砖上方 1.5 单位高度生成
-            GameObject newCoin = Instantiate(coinPrefab, targetTile.transform.position + Vector3.up * 1.0f, coinPrefab.transform.rotation);
-            // 【关键】设为子物体。地砖掉落时，金币会跟着 Transform 矩阵一起变换并销毁
+            GameObject newCoin = Instantiate(coinPrefab, targetTile.transform.position + Vector3.up * 1.0f, Quaternion.identity);            // 【关键】设为子物体。地砖掉落时，金币会跟着 Transform 矩阵一起变换并销毁
             newCoin.transform.SetParent(targetTile.transform);
+            // 修正缩放畸变，改为硬编码比例最安全
+            newCoin.transform.localScale = new Vector3(1f/3.8f, 1f/0.5f, 1f/3.8f) * 0.5f;
 
             // 生产：计数增加
             currentCoinCount++;
