@@ -233,7 +233,22 @@ public class GameManager : MonoBehaviour
         if (timeLeft > 0)
         {
             timeLeft -= Time.deltaTime; // 每一帧减去经过的时间
-            timerText.text = "Time: " + Mathf.CeilToInt(timeLeft).ToString();
+
+            // --- 格式化显示补丁 ---
+            // 1. 计算分钟（向下取整）
+            int minutes = Mathf.FloorToInt(timeLeft / 60f);
+            // 2. 计算秒数（取余数，Mathf.CeilToInt 向上取整保证最后一秒显示为 1 而不是瞬间变 0）
+            int seconds = Mathf.CeilToInt(timeLeft % 60f);
+
+            // 特殊处理：如果秒数达到 60（由于向上取整可能出现），进位到分钟
+            if (seconds == 60)
+            {
+                minutes += 1;
+                seconds = 0;
+            }
+
+            // 3. 拼接字符串：{分钟}:{秒数:D2} (D2 表示始终占据两位数字，不足补0)
+            timerText.text = string.Format("{0}:{1:D2}", minutes, seconds);
         }
         else
         {
@@ -252,6 +267,14 @@ public class GameManager : MonoBehaviour
     public void EndGame()
     {
         isGameOver = true;
+
+        // --- UI 优化补丁 ---
+        // 1. 隐藏平时的分数显示，避免和结算面板重复
+        if (scoreText != null) 
+        {
+            scoreText.gameObject.SetActive(false); 
+        }
+
         gameOverPanel.SetActive(true);  // 显示结束面板
         finalScoreText.text = "Final Score: " + score;
 
