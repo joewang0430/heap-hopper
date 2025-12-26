@@ -20,6 +20,11 @@ public class GameManager : MonoBehaviour
     public float dropInterval = 2.0f; // 掉落间隔，会随时间缩短
     public float respawnDelay = 5.0f; // 地砖掉落后多久重生
 
+    [Header("金币设置")]
+    public GameObject coinPrefab;
+    private int currentCoinCount = 0;
+    private const int MAX_COINS = 3;
+
     [Header("游戏数据")]
     public int score = 0;
     public float timeLeft = 60f;
@@ -45,7 +50,7 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
-        // 引擎会扫描堆内存，找到那个 Tag 为 "Player" 的物体，并把它的 Transform 地址存下来
+        // 寻找玩家：引擎会扫描堆内存，找到那个 Tag 为 "Player" 的物体，并把它的 Transform 地址存下来
         GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
         if (playerObj != null)
         {
@@ -56,12 +61,29 @@ public class GameManager : MonoBehaviour
             Debug.LogError("Cannot find object with Tag=Player, please chack the scene!");
         }
 
+        // 启动统一的游戏逻辑协程
+        StartCoroutine(GameInitializationSequence());
+    }
+
+    IEnumerator GameInitializationSequence()
+    {
+        // 1. 同步等待：确保 GridManager 完成 25 块地砖的 malloc 和注册
+        yield return new WaitForSeconds(1.1f);
+
+        // 2. 生成初始金币
+        for (int i = 0; i < MAX_COINS; i++)
+        {
+            SpawnNewCoin();
+        }
+
+        // 3. 衔接之前的掉落循环
+        // 可以直接在这里开启另一个协程，或者直接在这个循环里写掉落逻辑
         StartCoroutine(AutoDropSequence());
     }
 
     IEnumerator AutoDropSequence()
     {
-        // 核心：等待 0.5 秒，确保 GridManager 已经在堆上 malloc 完了 25 块地砖
+        // 核心：等待 ～ 秒，确保 GridManager 已经在堆上 malloc 完了 25 块地砖
         yield return new WaitForSeconds(1f);
 
         // 游戏没结束就一直循环
@@ -76,6 +98,67 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    void SpawnNewCoin()
+    {
+        // 健壮性检查：如果地砖快掉光了，就不刷了
+        if (allTiles.Count < MAX_COINS) return;
+
+        // 1. 筛选合法的地砖 (过滤掉已经有金币的，和开局时的中心点)
+        List<FloorTile> eligibleTiles = new List<FloorTile>();
+
+        foreach (var tile in allTiles)
+        {
+            // 判定逻辑：金币是作为地砖的子物体生成的
+            // 如果该地砖下没有子物体，说明它是空的
+            if (tile.transform.childCount == 0)
+            {
+                // 排除开局时的中心点 (0, 0, 0)
+                if (Time.timeSinceLevelLoad < 2f && Vector3.Distance(tile.transform.position, Vector3.zero) < 1.0f)
+                {
+                    continue;
+                }
+                eligibleTiles.Add(tile);
+
+            }
+        }
+
+        // 2. 随机选一个格子，实例化金币
+        if (eligibleTiles.Count > 0)
+        {
+            FloorTile targetTile = eligibleTiles[Random.Range(0, eligibleTiles.Count)];
+
+            // 在地砖上方 1.5 单位高度生成
+            GameObject newCoin = Instantiate(coinPrefab, targetTile.transform.position + Vector3.up * 1.0f, coinPrefab.transform.rotation);
+            // 【关键】设为子物体。地砖掉落时，金币会跟着 Transform 矩阵一起变换并销毁
+            newCoin.transform.SetParent(targetTile.transform);
+
+            // 生产：计数增加
+            currentCoinCount++;
+        }
+    }
+
+    // --- 补全：金币收集的通知接口 ---
+    public void NotifyCoinCollected()
+    {
+        // 1. 逻辑计数减一
+        currentCoinCount--;
+
+        // 2. 启动协程：实现你要求的“0.5s 很短的等待时间”
+        StartCoroutine(DelayedRespawnCoin(0.5f));
+    }
+
+    // --- 补全：金币延迟重生的状态机 ---
+    IEnumerator DelayedRespawnCoin(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+
+        // 只有游戏没结束时才刷新
+        if (!isGameOver)
+        {
+            SpawnNewCoin();
+        }
+    }
+    
     // 核心逻辑：随机选一块砖掉下去
     public void DropRandomTile()
     {
@@ -108,7 +191,7 @@ public class GameManager : MonoBehaviour
         {
             // 1. 在原位重新申请内存（Instantiate）
             // 注意：这里需要 GridManager 里的那个 tilePrefab，
-            // 我们可以在 GameManager 里也引用它，或者通过 GridManager 提供
+            // 可以在 GameManager 里也引用它，或者通过 GridManager 提供
             GameObject newTile = Instantiate(GridManager.Instance.tilePrefab, position, Quaternion.identity);
 
             // 2. 重新注册到列表中，使其可以再次被点名掉落

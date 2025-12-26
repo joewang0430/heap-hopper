@@ -30,8 +30,8 @@ public class PlayerJump : MonoBehaviour
     void Update()
     {
         // --- 核心修改：主动探测地面 ---
-        // 我们从球心向下发射一个虚构的“小球探头”
-        // 只要这个探头碰到了东西，我们就认为接地了
+        // 从球心向下发射一个虚构的“小球探头”
+        // 只要这个探头碰到了东西，就认为接地了
         isGrounded = Physics.CheckSphere(transform.position + Vector3.down * 0.5f, 0.2f, groundLayer);
 
         if (Input.GetKeyDown(KeyCode.Space) && isGrounded)

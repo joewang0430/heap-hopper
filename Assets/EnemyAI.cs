@@ -25,7 +25,7 @@ public class EnemyAI : MonoBehaviour
         // 目标位置 - 当前位置 = 从当前指向目标的向量
         Vector3 direction = (playerTransform.position - transform.position);
 
-        // 我们只关心方向，不希望离得越远力越大，所以需要归一化 (Normalize)
+        // 只关心方向，不希望离得越远力越大，所以需要归一化 (Normalize)
         direction.y = 0; // 忽略高度差，防止敌人想“飞”起来
         Vector3 forceDirection = direction.normalized;
         // 施加持续的力

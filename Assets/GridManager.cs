@@ -35,7 +35,7 @@ public class GridManager : MonoBehaviour
                 // 复制 Prefab 模板的内容，并返回该实体的地址
                 GameObject newTile = Instantiate(tilePrefab, spawnPos, Quaternion.identity);
 
-                // 3. 注册：把这个新诞生的地砖地址，交给我们的全局裁判
+                // 3. 注册：把这个新诞生的地砖地址，交给全局裁判
                 FloorTile tileScript = newTile.GetComponent<FloorTile>();
                 if (tileScript != null)
                 {
