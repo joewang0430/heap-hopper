@@ -54,7 +54,7 @@ public class GameManager : MonoBehaviour
         GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
         if (playerObj != null)
         {
-            playerTransform = playerObj.transform;
+            playerTransform = playerObj.transform; // NOTE: 长期追踪
         }
         else
         {
@@ -89,7 +89,7 @@ public class GameManager : MonoBehaviour
         // 游戏没结束就一直循环
         while (!isGameOver)
         {
-            // 1. 每隔 ~ 秒（你可以根据难度调整这个数字）点名一块砖
+            // 1. 每隔 ~ 秒（可以根据难度调整这个数字）点名一块砖
             float currentInterval = Mathf.Max(0.5f, dropInterval - (Time.timeSinceLevelLoad / 60f));
             yield return new WaitForSeconds(currentInterval);
 
@@ -135,28 +135,6 @@ public class GameManager : MonoBehaviour
 
             // 生产：计数增加
             currentCoinCount++;
-        }
-    }
-
-    // --- 补全：金币收集的通知接口 ---
-    public void NotifyCoinCollected()
-    {
-        // 1. 逻辑计数减一
-        currentCoinCount--;
-
-        // 2. 启动协程：实现你要求的“0.5s 很短的等待时间”
-        StartCoroutine(DelayedRespawnCoin(0.5f));
-    }
-
-    // --- 补全：金币延迟重生的状态机 ---
-    IEnumerator DelayedRespawnCoin(float delay)
-    {
-        yield return new WaitForSeconds(delay);
-
-        // 只有游戏没结束时才刷新
-        if (!isGameOver)
-        {
-            SpawnNewCoin();
         }
     }
     
@@ -256,7 +234,30 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    // 供其他脚本（如金币）调用的公共方法
+    /* 供其他脚本（如金币）调用的公共方法 */
+
+    // --- 补全：金币收集的通知接口 ---
+    public void NotifyCoinCollected()
+    {
+        // 1. 逻辑计数减一
+        currentCoinCount--;
+
+        // 2. 启动协程：实现要求的“0.5s 很短的等待时间”
+        StartCoroutine(DelayedRespawnCoin(0.5f));
+    }
+
+    // --- 补全：金币延迟重生的状态机 ---
+    IEnumerator DelayedRespawnCoin(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+
+        // 只有游戏没结束时才刷新
+        if (!isGameOver)
+        {
+            SpawnNewCoin();
+        }
+    }
+
     public void AddScore(int amount)
     {
         if (isGameOver) return;

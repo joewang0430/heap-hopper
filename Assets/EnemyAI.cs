@@ -10,7 +10,7 @@ public class EnemyAI : MonoBehaviour
     void Start()
     {
         rb = GetComponent<Rigidbody>();
-        // 如果你没在面板拖入玩家，代码自动去场景里找带有 "Player" 标签的物体
+        // 如果没在面板拖入玩家，代码自动去场景里找带有 "Player" 标签的物体
         if (playerTransform == null)
         {
             playerTransform = GameObject.FindGameObjectWithTag("Player").transform;

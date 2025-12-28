@@ -8,7 +8,7 @@ public class PlayerJump : MonoBehaviour
     private Rigidbody rb;
 
     [Header("移动设置")]
-    // 2. 定义跳跃的力量大小（我可以随时回来改这个数字）
+    // 2. 定义跳跃的力量大小（可以随时回来改这个数字）
     public float jumpForce = 6f;  // 跳跃的力量
     public float moveSpeed = 10f;   // 跳跃的力量
 
