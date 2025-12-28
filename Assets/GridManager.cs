@@ -28,7 +28,7 @@ public class GridManager : MonoBehaviour
         {
             for (int z = 0; z < cols; z++)
             {
-                // 1. 计算每一块地砖在世界坐标系中的位置，-8是因为我原来的墙和球的位置有些偏移
+                // 1. 计算每一块地砖在世界坐标系中的位置，-8是因为原来的墙和球的位置有些偏移
                 Vector3 spawnPos = new Vector3(x * spacing - 8, 0, z * spacing - 8);
 
                 // 2. 实例化 (关键动作)：这相当于在堆(Heap)上申请一块内存，
