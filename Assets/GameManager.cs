@@ -212,6 +212,15 @@ public class GameManager : MonoBehaviour
         {
             timeLeft -= Time.deltaTime; // 每一帧减去经过的时间
 
+            // --- 修复补丁：防止显示负数 ---
+            if (timeLeft < 0)
+            {
+                timeLeft = 0;
+                timerText.text = "0:00";
+                EndGame();
+                return;
+            }
+
             // --- 格式化显示补丁 ---
             // 1. 计算分钟（向下取整）
             int minutes = Mathf.FloorToInt(timeLeft / 60f);
