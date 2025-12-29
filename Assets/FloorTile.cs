@@ -2,6 +2,7 @@
 
 using System.Collections;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 public class FloorTile : MonoBehaviour
 {
@@ -57,6 +58,30 @@ public class FloorTile : MonoBehaviour
         transform.localScale = targetScale;
     }
 
+    public void ResetTile()
+    {
+        // 1. 重置物理
+        rb.isKinematic = true;
+        rb.linearVelocity = Vector3.zero;
+        rb.angularVelocity = Vector3.zero;
+
+        // 2. 重置外观
+        if (meshRenderer != null)
+            meshRenderer.material.color = Color.white;
+
+        for (int i = transform.childCount - 1; i >= 0; i--)
+        {
+            Destroy(transform.GetChild(i).gameObject);
+        }
+
+        // 3. 重置缩放并播放动画
+        transform.localScale = Vector3.zero;
+
+        // 4. 停止可能还在跑的旧协程，重新开始生长
+        StopAllCoroutines();
+        StartCoroutine(SpawnAnimation());
+    }
+
     public void StartFalling(float delay)
     {
         StartCoroutine(FallSequence(delay));
@@ -75,8 +100,8 @@ public class FloorTile : MonoBehaviour
         rb.isKinematic = false;
 
         // 4. 等待 3 秒后销毁
-        yield return new WaitForSeconds(3.0f);
-        Destroy(gameObject);
+        // yield return new WaitForSeconds(3.0f);
+        // Destroy(gameObject);
     }
 
     // Update is called once per frame

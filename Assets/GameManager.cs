@@ -20,6 +20,9 @@ public class GameManager : MonoBehaviour
     public float dropInterval = 2.0f; // 掉落间隔，会随时间缩短
     public float respawnDelay = 5.0f; // 地砖掉落后多久重生
 
+    // 对象池
+    private ObjectPool<FloorTile> tilePool;
+
     [Header("金币设置")]
     public GameObject coinPrefab;
     private int currentCoinCount = 0;
@@ -36,6 +39,9 @@ public class GameManager : MonoBehaviour
     public GameObject gameOverPanel;
     public TextMeshProUGUI finalScoreText;
 
+    [Header("资源引用")]
+    public FloorTile tilePrefabRef;
+
     void Awake()
     {
         // 初始化单例
@@ -50,6 +56,13 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
+        // 初始化对象池
+        // 创建一个父物体来收纳
+        GameObject poolRoot = new GameObject("TilePool_Runtime");
+
+        // 创建池子
+        tilePool = new ObjectPool<FloorTile>(tilePrefabRef, 10, poolRoot.transform);
+
         // 寻找玩家：引擎会扫描堆内存，找到那个 Tag 为 "Player" 的物体，并把它的 Transform 地址存下来
         GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
         if (playerObj != null)
@@ -58,7 +71,7 @@ public class GameManager : MonoBehaviour
         }
         else
         {
-            Debug.LogError("Cannot find object with Tag=Player, please chack the scene!");
+            Debug.LogError("Cannot find object with Tag=Player, please check the scene!");
         }
 
         // 启动统一的游戏逻辑协程
@@ -157,25 +170,35 @@ public class GameManager : MonoBehaviour
             allTiles.RemoveAt(index);
 
             // 5. 开启一个“重生计时器”，把坐标传进去
-            StartCoroutine(RespawnTileSequence(originalPos));
+            StartCoroutine(RespawnTileSequence(originalPos, tile));
         }
     }
 
-    IEnumerator RespawnTileSequence(Vector3 position)
+    IEnumerator RespawnTileSequence(Vector3 position, FloorTile fallenTile)
     {
         // 等待地砖销毁并过一段冷却时间
         yield return new WaitForSeconds(respawnDelay);
 
+        // 此时 fallenTile 应该已经掉到深渊里了，把它抓回来洗白
+        if (fallenTile != null)
+        {
+            tilePool.Return(fallenTile);
+        }
+
         if (!isGameOver)
         {
-            // 1. 在原位重新申请内存（Instantiate）
-            // 注意：这里需要 GridManager 里的那个 tilePrefab，
-            // 可以在 GameManager 里也引用它，或者通过 GridManager 提供
-            GameObject newTile = Instantiate(GridManager.Instance.tilePrefab, position, Quaternion.identity);
+            // 1. Get() 返回的就是 FloorTile 脚本，不需要 GetComponent
+            FloorTile newTileScript = tilePool.Get();
 
-            // 2. 重新注册到列表中，使其可以再次被点名掉落
-            FloorTile tileScript = newTile.GetComponent<FloorTile>();
-            RegisterTile(tileScript);
+            // 2. 设置位置
+            newTileScript.transform.position = position;
+            newTileScript.transform.rotation = Quaternion.identity;
+
+            // 3. 【关键】重置状态 (物理、颜色、动画)
+            newTileScript.ResetTile();
+
+            // 4. 注册
+            RegisterTile(newTileScript);
         }
     }
 
